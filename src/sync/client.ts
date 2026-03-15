@@ -1,0 +1,84 @@
+import * as WebSocket from 'ws';
+import { Hlc } from './hlc';
+import { Operation } from '../models/dtos';
+import { v4 as uuidv4 } from 'uuid';
+
+export class GanttSyncClient {
+    private ws: WebSocket | null = null;
+    private hlc: Hlc;
+    private nodeId: string;
+    private tenantId: string;
+    private url: string;
+
+    constructor(url: string, tenantId: string) {
+        this.url = url;
+        this.tenantId = tenantId;
+        this.nodeId = uuidv4();
+        this.hlc = Hlc.zero(this.nodeId);
+    }
+
+    public connect(jwt: string) {
+        this.ws = new WebSocket(this.url, {
+            headers: {
+                'Authorization': `Bearer ${jwt}`
+            }
+        });
+
+        this.ws.on('open', () => {
+            console.log('Connected to Gantt Sync Server');
+            this.send({
+                type: 'subscribe',
+                channel: this.tenantId
+            });
+        });
+
+        this.ws.on('message', (data: WebSocket.Data) => {
+            const msg = JSON.parse(data.toString());
+            this.handleMessage(msg);
+        });
+
+        this.ws.on('error', (err) => {
+            console.warn('Gantt Sync Server connection failed (offline mode):', err.message);
+        });
+    }
+
+    private handleMessage(msg: any) {
+        // 1. Causality (Receive Logic)
+        if (msg.timestamp) {
+            try {
+                const remoteHlc = Hlc.parse(msg.timestamp);
+                this.hlc = this.hlc.receive(remoteHlc, Date.now());
+            } catch (e) {
+                console.error('Failed to parse HLC', e);
+            }
+        }
+
+        // 2. Initial Calibration
+        if (msg.type === 'SUBSCRIBE_SUCCESS' || msg.type === 'AUTH_SUCCESS') {
+            // Server might send a timestamp to calibrate
+            console.log('Subscription success', msg);
+        }
+
+        // 3. Dispatch to CRDT Engine (todo)
+    }
+
+    public sendOperation(type: string, data: any) {
+        // Generate timestamp
+        this.hlc = this.hlc.send(Date.now());
+        
+        const op: Operation = {
+            type: type,
+            data: data,
+            timestamp: this.hlc,
+            actorId: this.nodeId
+        };
+
+        this.send(op);
+    }
+
+    private send(msg: any) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify(msg));
+        }
+    }
+}

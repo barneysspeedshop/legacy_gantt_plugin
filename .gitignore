@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Production
+out/
+dist/
+
+# Testing
+.vscode-test/
+coverage/
+
+# Misc
+.DS_Store
+*.vsix
+*.log
+
+# IDEs
+.idea/
+*.iml

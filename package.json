@@ -1,0 +1,72 @@
+{
+  "name": "legacy-gantt-plugin",
+  "displayName": "Legacy Gantt Plugin",
+  "description": "VS Code extension for Gantt-Sync Protocol",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:legacy-gantt-plugin.showGantt"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "legacy-gantt-plugin.showGantt",
+        "title": "Legacy Gantt Plugin: Show Legacy Gantt"
+      }
+    ],
+    "configuration": {
+      "title": "Legacy Gantt",
+      "properties": {
+        "legacyGantt.serverUrl": {
+          "type": "string",
+          "default": "ws://localhost:8080/ws",
+          "description": "WebSocket URL for the Gantt Sync Server"
+        },
+        "legacyGantt.tenantId": {
+          "type": "string",
+          "default": "default-tenant",
+          "description": "Tenant ID for synchronization scope"
+        },
+        "legacyGantt.jvmAuthToken": {
+          "type": "string",
+          "default": "",
+          "description": "JWT Auth Token for the server (Dev only)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/crypto-js": "^4.2.1",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.10.0",
+    "@types/uuid": "^9.0.7",
+    "@types/vscode": "^1.80.0",
+    "@types/ws": "^8.5.10",
+    "@vscode/test-electron": "^2.3.9",
+    "eslint": "^9.17.0",
+    "glob": "^10.3.10",
+    "globals": "^15.14.0",
+    "mocha": "^11.7.5",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "crypto-js": "^4.2.0",
+    "uuid": "^9.0.1",
+    "ws": "^8.16.0"
+  }
+}
