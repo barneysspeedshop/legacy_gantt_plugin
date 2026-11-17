@@ -1,11 +1,16 @@
 # Legacy Gantt Plugin
 
-A VS Code extension for the Gantt-Sync Protocol.
+A prototype VS Code extension for the Gantt-Sync Protocol, released under MIT.
+
+The extension host still uses the older JSON wire format, while the current
+server uses binary Protobuf. The Flutter webview displays mock data. Production
+server synchronization is not supported by this release.
 
 ## Features
 
 - **Gantt Chart Visualization**: View Gantt charts directly in VS Code.
-- **Real-time Sync**: Synchronizes changes using the Gantt-Sync Protocol (HLC, CRDT, Merkle).
+- **Experimental sync host**: Contains a JSON-based HLC, CRDT and Merkle client
+  for development; it requires migration before use with the current server.
 
 ## How to Run
 
@@ -18,6 +23,7 @@ A VS Code extension for the Gantt-Sync Protocol.
 
 Currently, the extension connects to a default local server:
 - **URL**: `ws://localhost:8080/ws`
-- **Tenant**: `tenant-123`
+- **Tenant**: `default-tenant`
 
-To test synchronization, ensure you have a compatible Gantt Sync Server running locally.
+Use offline mock data for UI development. A current Gantt Sync Server is not
+compatible with this prototype's JSON client.

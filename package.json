@@ -3,6 +3,7 @@
   "displayName": "Legacy Gantt Plugin",
   "description": "VS Code extension for Gantt-Sync Protocol",
   "version": "0.0.1",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.80.0"
   },
