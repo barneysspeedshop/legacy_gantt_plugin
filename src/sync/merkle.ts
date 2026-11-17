@@ -1,6 +1,10 @@
 import * as CryptoJS from 'crypto-js';
 import { Task } from '../models/dtos';
 
+function isUnknownArray(value: unknown): value is unknown[] {
+    return Array.isArray(value);
+}
+
 export class MerkleTree {
 
     public static computeTaskHash(task: Task): string {
@@ -10,7 +14,7 @@ export class MerkleTree {
         // id, rowId, start, end, name, completion, isSummary, isMilestone,
         // resourceId, parentId, notes, isDeleted, metadata.
 
-        const data: any = {
+        const data = {
             id: task.id,
             rowId: task.rowId,
             start: task.start,
@@ -30,21 +34,21 @@ export class MerkleTree {
         return CryptoJS.SHA256(canonicalJson).toString();
     }
 
-    private static stringifyResultIds(obj: any): string {
+    private static stringifyResultIds(obj: unknown): string {
         if (obj === null || typeof obj !== 'object') {
             return JSON.stringify(obj);
         }
         
-        if (Array.isArray(obj)) {
+        if (isUnknownArray(obj)) {
             // Arrays should arguably be sorted too if order doesn't matter, 
             // but for lists of things like children, order might matter. 
             // For now, let's map them.
             return '[' + obj.map(item => MerkleTree.stringifyResultIds(item)).join(',') + ']';
         }
 
-        const keys = Object.keys(obj).sort();
-        const parts = keys.map(key => {
-            return `"${key}":${MerkleTree.stringifyResultIds(obj[key])}`;
+        const entries = Object.entries(obj).sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0);
+        const parts = entries.map(([key, value]) => {
+            return `"${key}":${MerkleTree.stringifyResultIds(value)}`;
         });
         return '{' + parts.join(',') + '}';
     }

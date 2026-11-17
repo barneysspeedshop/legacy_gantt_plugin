@@ -86,10 +86,6 @@ export class GanttPanel {
         // Base URI for the webview to load resources from
         const baseUri = this._panel.webview.asWebviewUri(webviewPath);
         
-        // Path to the Flutter build's index.html
-        const indexPath = vscode.Uri.joinPath(webviewPath, 'index.html');
-
-        let indexHtml = '';
         try {
             return `<!DOCTYPE html>
             <html>

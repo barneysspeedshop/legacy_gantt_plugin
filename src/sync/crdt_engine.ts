@@ -93,13 +93,12 @@ export class CrdtEngine {
             
             // If we stored HLC as object in DTO, we can use it. But serialized JSON usually has strings.
             // Let's assume strict HLC object in memory.
-            const lastHlc = lastHlcStr ? (lastHlcStr instanceof Hlc ? lastHlcStr : Hlc.parse((lastHlcStr as any).toString())) : target.lastUpdated;
+            const lastHlc = lastHlcStr ?? target.lastUpdated;
             return opTimestamp.compare(lastHlc) >= 0;
         };
 
         const updateField = <T>(field: string, candidate: T, current: T): T => {
             if (shouldUpdate(field)) {
-                // @ts-ignore
                 newTimestamps[field] = opTimestamp;
                 return candidate;
             }
@@ -107,7 +106,7 @@ export class CrdtEngine {
         };
 
         // Merge logic mirroring Dart implementation
-        const isDeleted = changes.hasOwnProperty('isDeleted') ? updateField('isDeleted', changes.isDeleted, target.isDeleted) : target.isDeleted;
+        const isDeleted = Object.prototype.hasOwnProperty.call(changes, 'isDeleted') ? updateField('isDeleted', changes.isDeleted, target.isDeleted) : target.isDeleted;
         const rowId = changes.rowId !== undefined ? updateField('rowId', changes.rowId, target.rowId) : target.rowId;
         const start = changes.start || changes.startDate || changes.start_date;
         const newStart = start ? updateField('start', start, target.start) : target.start;

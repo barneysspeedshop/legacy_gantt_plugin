@@ -48,14 +48,13 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "node ./out/test/runTest.js"
+    "test": "node test/sync.test.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@types/crypto-js": "^4.2.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.10.0",
-    "@types/uuid": "^9.0.7",
     "@types/vscode": "^1.80.0",
     "@types/ws": "^8.5.10",
     "@vscode/test-electron": "^2.3.9",
@@ -63,11 +62,11 @@
     "glob": "^10.3.10",
     "globals": "^15.14.0",
     "mocha": "^11.7.5",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.73.0"
   },
   "dependencies": {
     "crypto-js": "^4.2.0",
-    "uuid": "^9.0.1",
     "ws": "^8.16.0"
   }
 }

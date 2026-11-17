@@ -1,7 +1,7 @@
 import * as WebSocket from 'ws';
 import { Hlc } from './hlc';
 import { Operation } from '../models/dtos';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'node:crypto';
 
 export class GanttSyncClient {
     private ws: WebSocket | null = null;
@@ -13,7 +13,7 @@ export class GanttSyncClient {
     constructor(url: string, tenantId: string) {
         this.url = url;
         this.tenantId = tenantId;
-        this.nodeId = uuidv4();
+        this.nodeId = randomUUID();
         this.hlc = Hlc.zero(this.nodeId);
     }
 

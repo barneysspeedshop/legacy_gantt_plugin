@@ -16,7 +16,7 @@ export interface Task {
     lastUpdated: Hlc;
     lastUpdatedBy?: string;
     fieldTimestamps: Record<string, Hlc>;
-    metadata: Record<string, any>;
+    metadata: Record<string, unknown>;
 }
 
 export interface Operation {

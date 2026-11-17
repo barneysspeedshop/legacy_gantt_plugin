@@ -14,7 +14,6 @@ export class Hlc {
     }
 
     public static parse(hlcString: string): Hlc {
-        const parts = hlcString.split('-');
         // Expecting minimum 3 parts: ISO-Counter-NodeId...
         // But ISO might contain hyphens (YYYY-MM-DD...).
         // A safer way is to use regex similar to Dart implementation.
