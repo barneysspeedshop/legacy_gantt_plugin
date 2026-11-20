@@ -46,7 +46,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "lint": "eslint src",
+    "lint": "eslint src --max-warnings 0",
     "test": "npm run compile && npm run lint && node test/sync.test.js"
   },
   "devDependencies": {

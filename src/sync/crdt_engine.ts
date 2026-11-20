@@ -1,6 +1,31 @@
 import { Task, Operation } from '../models/dtos';
 import { Hlc } from './hlc';
 
+type TaskChanges = Partial<Pick<Task, 'isDeleted' | 'rowId' | 'start' | 'end' | 'name' | 'completion'>>;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function parseOperation(value: unknown): Operation | undefined {
+    if (!isRecord(value) || typeof value.type !== 'string' ||
+        !(value.timestamp instanceof Hlc) || typeof value.actorId !== 'string') return undefined;
+    return { type: value.type, data: value.data, timestamp: value.timestamp, actorId: value.actorId };
+}
+
+function taskChanges(data: Record<string, unknown>): TaskChanges {
+    const firstDate = (...values: unknown[]) => values.find((value): value is string =>
+        typeof value === 'string' && value.length > 0);
+    return {
+        isDeleted: typeof data.isDeleted === 'boolean' ? data.isDeleted : undefined,
+        rowId: typeof data.rowId === 'string' ? data.rowId : undefined,
+        start: firstDate(data.start, data.startDate, data.start_date),
+        end: firstDate(data.end, data.endDate, data.end_date),
+        name: typeof data.name === 'string' ? data.name : undefined,
+        completion: typeof data.completion === 'number' ? data.completion : undefined,
+    };
+}
+
 export class CrdtEngine {
 
     public mergeTasks(currentTasks: Task[], operations: Operation[]): Task[] {
@@ -11,9 +36,10 @@ export class CrdtEngine {
 
         for (const op of operations) {
             if (op.type === 'BATCH_UPDATE') {
-                const subOps = op.data.operations || [];
+                const subOps: unknown[] = isRecord(op.data) && Array.isArray(op.data.operations) ? op.data.operations : [];
                 for (const sub of subOps) {
-                    this.applyOp(taskMap, sub);
+                    const parsed = parseOperation(sub);
+                    if (parsed) this.applyOp(taskMap, parsed);
                 }
             } else {
                 this.applyOp(taskMap, op);
@@ -25,9 +51,10 @@ export class CrdtEngine {
     }
 
     private applyOp(taskMap: Map<string, Task>, op: Operation) {
+        if (!isRecord(op.data)) return;
         if (op.type === 'DELETE_TASK') {
             const taskId = op.data.id || op.data.taskId;
-            if (!taskId) return;
+            if (typeof taskId !== 'string' || !taskId) return;
 
             const existing = taskMap.get(taskId);
             const base = existing || this.createTombstone(taskId);
@@ -39,15 +66,15 @@ export class CrdtEngine {
             return;
         }
 
-        const effectiveData = op.data.data || op.data;
+        const effectiveData = isRecord(op.data.data) ? op.data.data : op.data;
         const taskId = effectiveData.id || effectiveData.taskId;
-        if (!taskId) return;
+        if (typeof taskId !== 'string' || !taskId) return;
 
         const existing = taskMap.get(taskId);
         const base = existing || this.createEmptyTask(taskId);
 
         // Assume resurrection if not explicitly deleting
-        const mergeData = { ...effectiveData, isDeleted: false };
+        const mergeData = { ...taskChanges(effectiveData), isDeleted: false };
         const merged = this.mergeTask(base, op, mergeData);
         taskMap.set(taskId, merged);
     }
@@ -84,7 +111,7 @@ export class CrdtEngine {
         };
     }
 
-    private mergeTask(target: Task, op: Operation, changes: any): Task {
+    private mergeTask(target: Task, op: Operation, changes: TaskChanges): Task {
         const newTimestamps = { ...target.fieldTimestamps };
         const opTimestamp = op.timestamp;
 
@@ -106,11 +133,11 @@ export class CrdtEngine {
         };
 
         // Merge logic mirroring Dart implementation
-        const isDeleted = Object.prototype.hasOwnProperty.call(changes, 'isDeleted') ? updateField('isDeleted', changes.isDeleted, target.isDeleted) : target.isDeleted;
+        const isDeleted = changes.isDeleted !== undefined ? updateField('isDeleted', changes.isDeleted, target.isDeleted) : target.isDeleted;
         const rowId = changes.rowId !== undefined ? updateField('rowId', changes.rowId, target.rowId) : target.rowId;
-        const start = changes.start || changes.startDate || changes.start_date;
+        const start = changes.start;
         const newStart = start ? updateField('start', start, target.start) : target.start;
-        const end = changes.end || changes.endDate || changes.end_date;
+        const end = changes.end;
         const newEnd = end ? updateField('end', end, target.end) : target.end;
         const name = changes.name !== undefined ? updateField('name', changes.name, target.name) : target.name;
         const completion = changes.completion !== undefined ? updateField('completion', changes.completion, target.completion) : target.completion;

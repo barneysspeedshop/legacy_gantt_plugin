@@ -59,3 +59,34 @@ test('Merkle task hashes ignore metadata key insertion order', () => {
     assert.equal(MerkleTree.computeRoot([]), 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
     assert.equal(MerkleTree.computeRoot(['b', 'a']), MerkleTree.computeRoot(['a', 'b']));
 });
+
+test('CRDT ignores malformed boundary payloads while applying valid batch entries', () => {
+    const clock = new Hlc(2000, 0, 'writer');
+    const operation = (data) => ({ type: 'UPDATE_TASK', data, timestamp: clock, actorId: 'writer' });
+    const result = new CrdtEngine().mergeTasks([task()], [
+        operation(null), operation([]), operation({ id: 42, name: 'Invalid id' }),
+        { type: 'BATCH_UPDATE', timestamp: clock, actorId: 'writer', data: { operations: [
+            null, { type: 'UPDATE_TASK', data: { id: 'task-1', name: 'Missing clock' } },
+            operation({ data: { id: 'task-1', name: 'Accepted', completion: 0.5 } }),
+        ] } },
+        { type: 'BATCH_UPDATE', timestamp: clock, actorId: 'writer', data: { operations: 'invalid' } },
+    ]);
+    assert.equal(result.length, 1);
+    assert.equal(result[0].name, 'Accepted');
+    assert.equal(result[0].completion, 0.5);
+});
+
+test('CRDT preserves legacy date aliases and rejects wrong task field types', () => {
+    const clock = new Hlc(2000, 0, 'writer');
+    const result = new CrdtEngine().mergeTasks([task()], [{
+        type: 'UPDATE_TASK', timestamp: clock, actorId: 'writer', data: {
+            taskId: 'task-1', start_date: '2026-11-21T00:00:00.000Z', endDate: '2026-11-22T00:00:00.000Z',
+            name: 123, completion: 'invalid', rowId: null,
+        },
+    }]);
+    assert.equal(result[0].start, '2026-11-21T00:00:00.000Z');
+    assert.equal(result[0].end, '2026-11-22T00:00:00.000Z');
+    assert.equal(result[0].name, 'Initial');
+    assert.equal(result[0].completion, 0);
+    assert.equal(result[0].rowId, 'row-1');
+});
