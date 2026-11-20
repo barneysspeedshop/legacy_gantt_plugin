@@ -36,14 +36,19 @@ export class GanttPanel {
         
         // Handle messages from the webview
         this._panel.webview.onDidReceiveMessage(
-            (message: any) => {
+            (message: unknown) => {
+                if (typeof message !== 'object' || message === null || !('command' in message)) return;
                 switch (message.command) {
                     case 'updateTask':
-                        this._syncClient.sendOperation('UPDATE_TASK', message.payload);
+                        if ('payload' in message) this._syncClient.sendOperation('UPDATE_TASK', message.payload);
                         return;
                     case 'log':
                         // Forward logs from webview to extension console
-                        console.log(`[Webview ${message.level}]`, ...message.args);
+                        if ('level' in message && typeof message.level === 'string' &&
+                            'args' in message && Array.isArray(message.args)) {
+                            const args: unknown[] = message.args;
+                            console.log(`[Webview ${message.level}]`, ...args);
+                        }
                         return;
                 }
             },

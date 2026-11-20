@@ -21,9 +21,7 @@ export interface Task {
 
 export interface Operation {
     type: string;
-    // data can be anything depending on the op type.
-    // For UPDATE_TASK, it's a partial task object.
-    data: any; 
+    data: unknown;
     timestamp: Hlc;
     actorId: string;
 }

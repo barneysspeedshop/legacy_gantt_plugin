@@ -33,7 +33,7 @@ export class GanttSyncClient {
         });
 
         this.ws.on('message', (data: WebSocket.Data) => {
-            const msg = JSON.parse(data.toString());
+            const msg: unknown = JSON.parse(data.toString());
             this.handleMessage(msg);
         });
 
@@ -42,9 +42,10 @@ export class GanttSyncClient {
         });
     }
 
-    private handleMessage(msg: any) {
+    private handleMessage(msg: unknown) {
+        if (typeof msg !== 'object' || msg === null || !('type' in msg)) return;
         // 1. Causality (Receive Logic)
-        if (msg.timestamp) {
+        if ('timestamp' in msg && typeof msg.timestamp === 'string' && msg.timestamp) {
             try {
                 const remoteHlc = Hlc.parse(msg.timestamp);
                 this.hlc = this.hlc.receive(remoteHlc, Date.now());
@@ -62,7 +63,7 @@ export class GanttSyncClient {
         // 3. Dispatch to CRDT Engine (todo)
     }
 
-    public sendOperation(type: string, data: any) {
+    public sendOperation(type: string, data: Operation['data']) {
         // Generate timestamp
         this.hlc = this.hlc.send(Date.now());
         
@@ -76,7 +77,7 @@ export class GanttSyncClient {
         this.send(op);
     }
 
-    private send(msg: any) {
+    private send(msg: Operation | { type: 'subscribe'; channel: string }) {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify(msg));
         }
