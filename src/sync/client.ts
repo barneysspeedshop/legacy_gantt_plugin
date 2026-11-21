@@ -1,4 +1,4 @@
-import * as WebSocket from 'ws';
+import WebSocket from 'ws';
 import { Hlc } from './hlc';
 import { Operation } from '../models/dtos';
 import { randomUUID } from 'node:crypto';
@@ -18,13 +18,14 @@ export class GanttSyncClient {
     }
 
     public connect(jwt: string) {
-        this.ws = new WebSocket(this.url, {
+        const socket = new WebSocket(this.url, {
             headers: {
                 'Authorization': `Bearer ${jwt}`
             }
         });
+        this.ws = socket;
 
-        this.ws.on('open', () => {
+        socket.on('open', () => {
             console.log('Connected to Gantt Sync Server');
             this.send({
                 type: 'subscribe',
@@ -32,12 +33,12 @@ export class GanttSyncClient {
             });
         });
 
-        this.ws.on('message', (data: WebSocket.Data) => {
+        socket.on('message', (data: WebSocket.Data) => {
             const msg: unknown = JSON.parse(data.toString());
             this.handleMessage(msg);
         });
 
-        this.ws.on('error', (err) => {
+        socket.on('error', (err) => {
             console.warn('Gantt Sync Server connection failed (offline mode):', err.message);
         });
     }
