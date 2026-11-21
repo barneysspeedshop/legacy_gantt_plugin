@@ -238,14 +238,14 @@ packages:
       path: "../../legacy_gantt_chart"
       relative: true
     source: path
-    version: "11.0.0"
+    version: "11.0.1"
   legacy_gantt_protocol:
     dependency: "direct overridden"
     description:
       path: "../../legacy_gantt_protocol"
       relative: true
     source: path
-    version: "4.0.0"
+    version: "4.0.1"
   legacy_timeline_scrubber:
     dependency: "direct main"
     description:
