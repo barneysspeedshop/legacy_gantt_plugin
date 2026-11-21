@@ -50,19 +50,19 @@
     "test": "npm run compile && npm run lint && node test/sync.test.js"
   },
   "devDependencies": {
-    "@eslint/js": "^9.17.0",
-    "@types/crypto-js": "^4.2.1",
-    "@types/node": "^20.10.0",
-    "@types/vscode": "^1.80.0",
+    "@eslint/js": "^10.0.1",
+    "@types/crypto-js": "^4.2.2",
+    "@types/node": "^26.6.6",
+    "@types/vscode": "^1.146.0",
     "@types/ws": "^8.18.2",
-    "eslint": "^9.17.0",
+    "eslint": "^10.15.0",
     "globals": "^17.14.0",
-    "typescript": "^5.3.3",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.73.0"
   },
   "dependencies": {
     "crypto-js": "^4.2.0",
-    "ws": "^8.16.0"
+    "ws": "^8.23.0"
   },
   "private": true
 }
